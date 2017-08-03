@@ -4,8 +4,8 @@ Prepared by Ryan Casey <ryan@dapphub.io> and Rain <rain@dapphub.io>.
 
 ## Requirements
 
-These are the requirements as collected from the issue tracker at
-https://github.com/JoinColony/colonySale/issues?q=is%3Aissue
+These are the requirements as collected from [the Colony issue tracker](
+https://github.com/JoinColony/colonySale/issues?q=is%3Aissue).
 
 1. <a name="req1">Token contract must be upgradable _in-place_. I.e., a multisig
    will be able to arbitrarily change the behavior of the contract at the token
