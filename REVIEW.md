@@ -14,8 +14,8 @@ https://github.com/JoinColony/colonySale/issues?q=is%3Aissue
    </a>
 2. <a name="req2">The ICO begins at a particular point in time, defined by a
    block number, and ends at the earlier of:
-  - 14 days after the start
-  - min(24 hours, max(3 hours, time-taken-to-reach-soft-cap)) + start-time
+    - 14 days after the start
+    - min(24 hours, max(3 hours, time-taken-to-reach-soft-cap)) + start-time
   [Reference](https://github.com/JoinColony/colonySale/issues/2#issue-227588904)
    </a>
 3. <a name="req3">CLNY price set at 0.001 ETH, miniumum purchase size of 0.01
