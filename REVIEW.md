@@ -180,23 +180,28 @@ and most of the requirements laid out in this document. It inherits from
 It provides the following public properties:
 
 - `uint startBlock`: The block at which the ICO begins.
-  Relates to [requirement #2](#req2).
+
+  See [requirement #2](#req2).
 - `uint endBlock`: The block at which the ICO ends.
-  Relates to [requirement #2](#req2).
+
+  See [requirement #2](#req2).
 - `uint postSoftCapMinBlocks`:  The minimum number of blocks to wait after the
-  soft cap is reached. (Approx. 3 hours worth, in accordance with the
-  requirements.)
-  Relates to [requirement #2](#req2).
+  soft cap is reached.
+  
+  See [requirement #2](#req2).
 - `uint postSoftCapMaxBlocks`:  The maximum number of blocks to wait after the
-  soft cap is reached. (Approx. 24 hours worth, in accordance with the
-  requirements.)
-  Relates to [requirement #2](#req2).
+  soft cap is reached.
+  
+  See [requirement #2](#req2).)
 - `uint constant TOKEN_PRICE_MULTIPLIER = 1000`: Number of tokens per ETH.
-  Relates to [requirement #3](#req3).
+
+  See [requirement #3](#req3).
 - `uint constant MIN_CONTRIBUTION = 10 finney`: Minimum purchase size.
-  Relates to [requirement #3](#req3).
+
+  See [requirement #3](#req3).
 - `uint minToRaise`: Minimum ICO raise.
-  Relates to [requirement #8](#req8).
+
+  See [requirement #8](#req8).
 - `uint public totalRaised`: Total ether raised, plus 1 finney for the purpose
   of not requiring the first buyer to pay extra gas.
 - `uint public softCap`: See requirements [#4](#req4) and [#2](#req2).
@@ -205,37 +210,46 @@ It provides the following public properties:
   as well as [requirement #5](#req5).
 - `Token token`: Address of the token being sold in this ICO.
 - `bool saleStopped`: `true` if the ICO has been paused, `false` otherwise.
-  Relates to [requirement #5](#req5).
+
+  See [requirement #5](#req5).
 - `bool saleFinalized`: `true` if the ICO has been finalized, `false` otherwise.
-  Relates to [requirement #7](#req7).
+
+  See [requirement #7](#req7).
 - `uint saleFinalisedTime`: The time at which the ICO was finalized.
-  Relates to requirements [#6](#req6) and [#7](#req7).
+
+  See requirements [#6](#req6) and [#7](#req7).
 - `address INVESTOR_1`: See [requirement #6](#req6).
 - `address INVESTOR_2`: See [requirement #6](#req6).
 - `address TEAM_MEMBER_1`: See [requirement #6](#req6).
 - `address TEAM_MULTISIG`: Takes the remainder of the development team
   allocation after distributions to team members #1 and #2.
+  
   See [requirement #6](#req6).
 - `address FOUNDATION`: See [requirement #6](#req6).
 - `address STRATEGY_FUND`: See [requirement #6](#req6).
 - `uint128 constant ALLOCATION_TEAM_MEMBER_ONE = 30 * 10 ** 18`: Amount in CLNY
-  wei allocated to team member #1.
+  wei granted to team member #1.
+  
   See [requirement #6](#req6).
 - `uint128 constant ALLOCATION_TEAM_MEMBER_TWO = 80 * 10 ** 18`: Amount in CLNY
-  wei allocated to team member #2.
+  wei granted to team member #2.
+  
   See [requirement #6](#req6).
 - `uint128 constant ALLOCATION_TEAM_MEMBERS_TOTAL = 110 * 10 ** 18`: Amount in
-  CLNY wei allocated to both team members.
+  CLNY wei granted to both team members.
+  
   See [requirement #6](#req6).
 - `mapping (address => uint) public userBuys`: Keeps track of ether spent by
   each participant.
 - `mapping (address => uint) public tokenGrants`: Keeps track of tokens granted
   to investors, development team members, the Colony Foundation, and the
   strategy fund.
+  
   See [requirement #6](#req6).
 - `mapping (address => GrantClaimTotal) public grantClaimTotals`: Keeps track of
   tokens still unclaimed by investors, development team members, the Colony
   Foundation, and the strategy fund.
+  
   See [requirement #6](#req6).
 
 The constructor takes eight arguments:
@@ -290,7 +304,9 @@ The `finalize` function may only be called after the ICO sale period has passed,
 if the minimum required amount has been raised, and if the ICO hasn't already
 been finalized. It calculates how much CLNY to mint based on how much ETH was
 raised, in accordance with [requirement #6](#req6). I.e., `totalRaised *
-TOKEN_PRICE_MULTIPLIER * 100 / 51`. It hands off ownership of the contract to
+TOKEN_PRICE_MULTIPLIER * 100 / 51`.
+
+The finalize funtion then hands off ownership of the contract to
 `colonyMultisig`, immediately transfers the required amount of CLNY to the
 investors, team members 1 & 2, and the strategy fund, and then allocates the
 vesting grants to the rest of the development team's multisig and the
@@ -309,10 +325,23 @@ at all.
 
 - The `_maxSaleDurationBlocks` constructor parameter passed to `ColonyTokenSale`
   will correspond to roughly 14 days' worth of blocks.
+- The `_postSoftCapMinBlocks` constructor parameter passed to `ColonyTokenSale`
+  will correspond to roughly 3 hours' worth of blocks.
+- The `_postSoftCapMaxBlocks` constructor parameter passed to `ColonyTokenSale`
+  will correspond to roughly 24 hours' worth of blocks.
+- The `_minToRaise` constructor parameter passed to `ColonyTokenSale`
+  will correspond to roughly 5 million USD worth of ether.
+- The `_softCap` constructor parameter passed to `ColonyTokenSale`
+  will correspond to roughly 15 million USD worth of ether.
 
 
 ## Findings
 
+- Due to the lack of a price feed, the actual soft cap and minimum raise
+  amounts will almost certainly differ from the amounts given in the
+  requirements. The degree to which the actual raise differs depends on
+  ETH volatility. It may be a good idea to communicate in terms of actual ETH
+  amounts once the ICO has begun.
 - It might be a good idea to replace the hard-coded numbers in
   `claimVestedTokens` with constants.
 - The Colony multisig receives all ETH funds immediately, so refunds are a
@@ -321,9 +350,3 @@ at all.
 
 Overall the system is fairly straightforward, well-tested, and should not cause
 any trouble.
-
-
-## Questions to answer pre-delivery
-
-- Have any potential issues with mixing static and percent-based allocations
-  been sufficiently mitigated via the approach in `finalize`?
