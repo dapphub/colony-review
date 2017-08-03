@@ -10,35 +10,43 @@ https://github.com/JoinColony/colonySale/issues?q=is%3Aissue).
 1. <a name="req1">Token contract must be upgradable _in-place_. I.e., a multisig
    will be able to arbitrarily change the behavior of the contract at the token
    address.
+   
    [Reference](https://github.com/JoinColony/colonySale/issues/1)
    </a>
 2. <a name="req2">The ICO begins at a particular point in time, defined by a
    block number, and ends at the earlier of:
     - 14 days after the start
     - min(24 hours, max(3 hours, time-taken-to-reach-soft-cap)) + start-time
-  [Reference](https://github.com/JoinColony/colonySale/issues/2#issue-227588904)
+    
+    [Reference](https://github.com/JoinColony/colonySale/issues/2#issue-227588904)
    </a>
 3. <a name="req3">CLNY price set at 0.001 ETH, miniumum purchase size of 0.01
    ETH. (I.e., no buying less than 10 CLNY.)
+   
    [Reference](https://github.com/JoinColony/colonySale/issues/3)
    </a>
 4. <a name="req4">15 million USD soft cap, based on exchange rate set at time of
    contract deployment.
+   
    [Reference](https://github.com/JoinColony/colonySale/issues/4)
    </a>
 5. <a name="req5">Ability to pause and resume the ICO at any time.
+
    [Reference](https://github.com/JoinColony/colonySale/issues/5)
    </a>
 6. <a name="req6">49% of the CLNY tokens are to be retained and divided among
    early investors (5%), the Colony team (10%), the Colony Foundation (15%), and
    the Colony strategy fund (19%). The Foundation and team shares are to be
    subject to vesting over a 24 month period with a 6 month cliff.
+   
    [Reference](https://github.com/JoinColony/colonySale/issues/9)
    </a>
 7. <a name="req7">CLNY must be manually unlocked in order to be transferrable.
+
    [Reference](https://github.com/JoinColony/colonySale/issues/7)
    </a>
 8. <a name="req8">Allow for refunds if less than 5 million USD is raised.
+
    [Reference](https://github.com/JoinColony/colonySale/issues/10)
    </a>
 
