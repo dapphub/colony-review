@@ -1,0 +1,321 @@
+# Colony Code Review
+
+Prepared by Ryan Casey <ryan@dapphub.io> and Rain <rain@dapphub.io>.
+
+## Requirements
+
+These are the requirements as collected from the issue tracker at
+https://github.com/JoinColony/colonySale/issues?q=is%3Aissue
+
+1. <a name="req1">Token contract must be upgradable _in-place_. I.e., a multisig
+   will be able to arbitrarily change the behavior of the contract at the token
+   address.
+   [Reference](https://github.com/JoinColony/colonySale/issues/1)
+   </a>
+2. <a name="req2">The ICO begins at a particular point in time, defined by a
+   block number, and ends at the earlier of:
+  - 14 days after the start
+  - min(24 hours, max(3 hours, time-taken-to-reach-soft-cap)) + start-time
+  [Reference](https://github.com/JoinColony/colonySale/issues/2#issue-227588904)
+   </a>
+3. <a name="req3">CLNY price set at 0.001 ETH, miniumum purchase size of 0.01
+   ETH. (I.e., no buying less than 10 CLNY.)
+   [Reference](https://github.com/JoinColony/colonySale/issues/3)
+   </a>
+4. <a name="req4">15 million USD soft cap, based on exchange rate set at time of
+   contract deployment.
+   [Reference](https://github.com/JoinColony/colonySale/issues/4)
+   </a>
+5. <a name="req5">Ability to pause and resume the ICO at any time.
+   [Reference](https://github.com/JoinColony/colonySale/issues/5)
+   </a>
+6. <a name="req6">49% of the CLNY tokens are to be retained and divided among
+   early investors (5%), the Colony team (10%), the Colony Foundation (15%), and
+   the Colony strategy fund (19%). The Foundation and team shares are to be
+   subject to vesting over a 24 month period with a 6 month cliff.
+   [Reference](https://github.com/JoinColony/colonySale/issues/9)
+   </a>
+7. <a name="req7">CLNY must be manually unlocked in order to be transferrable.
+   [Reference](https://github.com/JoinColony/colonySale/issues/7)
+   </a>
+8. <a name="req8">Allow for refunds if less than 5 million USD is raised.
+   [Reference](https://github.com/JoinColony/colonySale/issues/10)
+   </a>
+
+
+## Scope
+
+The web application which interacts with the smart contracts is considered out
+of scope. This code review is only concerned with the following files:
+
+1. ColonyTokenSale.sol
+2. EtherRouter.sol
+3. Migrations.sol
+4. Ownable.sol
+5. Resolver.sol
+6. Token.sol
+
+The code above makes use of the `ds-math` and `ds-erc20`
+[dappsys](https://github.com/dapphub/dappsys) libraries of smart contracts,
+as well as a custom Token contract combining parts of the `DSToken` and
+`DSTokenBase` contracts from the `ds-token` library.
+
+
+## Review
+
+This review will consist of a quick overview of test coverage, a file-by-file
+commentary, and finally an overview of our conclusions and recommendations.
+
+
+### Test Coverage
+
+Based on the output of the `gulp test:contracts:coverage` command, all lines of
+code are covered with tests. There are 82 tests in total. The tests use the
+Truffle framework and are written in Javascript, which can be somewhat dangerous
+due to [the potential difficulties in passing data between the
+two](https://blog.rexmls.com/the-solution-a2eddbda1a5d). A combination of
+Solidity and Javascript tests, or even just Solidity tests alone, would have
+been a little better. Still, the level of test coverage is in itself quite
+impressive and bodes well for this project.
+
+
+### Migrations.sol
+
+Contains a contract called `Migrations` which is only used by Truffle for its
+own purposes. As this contract is not in any way part of the system under
+review, we are ignoring it.
+
+
+### Ownable.sol
+
+Contains a contract called `Ownable` which is meant to be used as a mix-in. It
+provides a `public address owner` property which gets automatically set to
+`msg.sender`. It provides an `onlyOwner` modifier which `require`s
+`msg.sender` to be `owner` before proceeding. It also provides a `changeOwner`
+function which can only be called by the current owner. It takes an address
+other than `0x0` and sets `owner` to it.
+
+This is a short and simple contract which does not appear to have any problems.
+
+
+## Resolver.sol
+
+Contains a contract called `Resolver` which maintains a mapping, `pointers`, of
+`bytes4` function signatures to addresses and return value byte sizes (in most
+cases 32 bytes, in one case 0 bytes). It provides a `destination` function which
+takes a `bytes4` function signature and returns the address associated with the
+signature, an `outsize` function which takes the same argument and returns the
+`uint` return value size in bytes, a `lookup` function which again takes the
+same argument and returns the previous two values as a tuple (`(destination,
+outsize)`), and a `stringToSig` function which takes a function signature as a
+`string` and returns the `bytes4` signature.
+
+Note that the `bytes4` value used to look up "pointers" are identical to the
+values used by Solidiy to look up function calls, and that collisions between
+function names are not allowed by the Solidity compiler. Thus collisions should
+not pose a threat as long as the `Resolver` is used to forward function calls to
+a single contract type compiled with Solidity. Furthermore, all the forwarded
+functions in `Resolver` are hard-coded and correspond to ERC20 functions, so
+collisions are not even a remote possibility in this case.
+
+This is a short and simple contract which does not appear to have any problems.
+
+
+## EtherRouter.sol
+
+Contains a contract called `EtherRouter` which inherits from `Ownable`. This
+contract wraps a `Resolver` and allows the user to interact with the
+`EtherRouter` contract as if it were an ERC20 contract, forwarding calls to the
+addresses contained in the `Resolver`'s `pointers` map. It also provides public
+`symbol`, `decimals`, and `name` properties which are used by some clients to
+improve the user's experience when adding new tokens, and a public `resolver`
+property which holds the address of the `Resolver` currently wrapped.
+
+It additionally defines a function called `setResolver` which takes the address
+of a `Resolver` and sets the `resolver` property to it. This function may only
+be called by the contract's `owner`.
+
+This is the top-level contract which allows in-place upgrading, in accordance
+with [requirement #1](#req1). It uses a few lines of inline assembly, but is
+otherwise straightforward. It does not appear to pose any problems.
+
+
+## Token.sol
+
+Contains a contract called `Token`, which is mostly just a mash-up of the
+`DSToken` and `DSTokenBase` contracts from the `ds-token` library. It defines a
+few redundant public properties, which we recommend removing:
+
+- symbol
+- decimals
+- name
+- resolver
+
+These properties are not set or used anywhere and would be occluded by the
+properties on the `EtherRouter` contract anyway.
+
+`Token` provides implementations of the ERC20 functions, as well as a `mint`
+function which `owner` may use to issue tokens.
+
+This is a short and simple contract which leverages the `ds-math`, `ds-erc20`,
+and (to a lesser degree) `ds-token` libraries to minimize the risk of
+introducing exploits.
+
+
+## ColonyTokenSale.sol
+
+Contains a contract called `ColonyTokenSale`, which encapsulates the ICO logic
+and most of the requirements laid out in this document. It inherits from
+`DSMath`, giving it access to overflow-protected math operations, and it wraps a
+`Token` contract.
+
+It provides the following public properties:
+
+- `uint startBlock`: The block at which the ICO begins.
+  Relates to [requirement #2](#req2).
+- `uint endBlock`: The block at which the ICO ends.
+  Relates to [requirement #2](#req2).
+- `uint postSoftCapMinBlocks`:  The minimum number of blocks to wait after the
+  soft cap is reached. (Approx. 3 hours worth, in accordance with the
+  requirements.)
+  Relates to [requirement #2](#req2).
+- `uint postSoftCapMaxBlocks`:  The maximum number of blocks to wait after the
+  soft cap is reached. (Approx. 24 hours worth, in accordance with the
+  requirements.)
+  Relates to [requirement #2](#req2).
+- `uint constant TOKEN_PRICE_MULTIPLIER = 1000`: Number of tokens per ETH.
+  Relates to [requirement #3](#req3).
+- `uint constant MIN_CONTRIBUTION = 10 finney`: Minimum purchase size.
+  Relates to [requirement #3](#req3).
+- `uint minToRaise`: Minimum ICO raise.
+  Relates to [requirement #8](#req8).
+- `uint public totalRaised`: Total ether raised, plus 1 finney for the purpose
+  of not requiring the first buyer to pay extra gas.
+- `uint public softCap`: See requirements [#4](#req4) and [#2](#req2).
+- `address colonyMultisig`: The address which can call functions modified with
+  `onlyColonyMultisig`. Related to claiming raised funds after ICO finalization,
+  as well as [requirement #5](#req5).
+- `Token token`: Address of the token being sold in this ICO.
+- `bool saleStopped`: `true` if the ICO has been paused, `false` otherwise.
+  Relates to [requirement #5](#req5).
+- `bool saleFinalized`: `true` if the ICO has been finalized, `false` otherwise.
+  Relates to [requirement #7](#req7).
+- `uint saleFinalisedTime`: The time at which the ICO was finalized.
+  Relates to requirements [#6](#req6) and [#7](#req7).
+- `address INVESTOR_1`: See [requirement #6](#req6).
+- `address INVESTOR_2`: See [requirement #6](#req6).
+- `address TEAM_MEMBER_1`: See [requirement #6](#req6).
+- `address TEAM_MULTISIG`: Takes the remainder of the development team
+  allocation after distributions to team members #1 and #2.
+  See [requirement #6](#req6).
+- `address FOUNDATION`: See [requirement #6](#req6).
+- `address STRATEGY_FUND`: See [requirement #6](#req6).
+- `uint128 constant ALLOCATION_TEAM_MEMBER_ONE = 30 * 10 ** 18`: Amount in CLNY
+  wei allocated to team member #1.
+  See [requirement #6](#req6).
+- `uint128 constant ALLOCATION_TEAM_MEMBER_TWO = 80 * 10 ** 18`: Amount in CLNY
+  wei allocated to team member #2.
+  See [requirement #6](#req6).
+- `uint128 constant ALLOCATION_TEAM_MEMBERS_TOTAL = 110 * 10 ** 18`: Amount in
+  CLNY wei allocated to both team members.
+  See [requirement #6](#req6).
+- `mapping (address => uint) public userBuys`: Keeps track of ether spent by
+  each participant.
+- `mapping (address => uint) public tokenGrants`: Keeps track of tokens granted
+  to investors, development team members, the Colony Foundation, and the
+  strategy fund.
+  See [requirement #6](#req6).
+- `mapping (address => GrantClaimTotal) public grantClaimTotals`: Keeps track of
+  tokens still unclaimed by investors, development team members, the Colony
+  Foundation, and the strategy fund.
+  See [requirement #6](#req6).
+
+The constructor takes eight arguments:
+
+- `uint _startBlock`: Sets `startBlock`.
+- `uint _minToRaise`: Sets `minToRaise`.
+- `uint _softCap`: Sets `softCap`.
+- `uint _postSoftCapMinBlocks`: Sets `postSoftCapMinBlocks`
+- `uint _postSoftCapMaxBlocks`: Sets `postSoftCapMaxBlocks`
+- `uint _maxSaleDurationBlocks`: Sets `endBlock` by addition to `_startBlock`.
+- `address _token`: The address of the token to sell. Sets `token`.
+- `address _colonyMultisig`: Sets `colonyMultisig`.
+
+The constructor checks the addresses to ensure they aren't set to zero. It uses
+a modifier for only one of these checks owing to [a Solidity
+bug](https://github.com/ethereum/solidity/issues/2621). This bug has been
+resolved recently, so our recommendation is to upgrade to Solidity 0.4.14 and
+use the `nonZeroAddress` modifier for both checks.
+
+`_postSoftCapMinBlocks` must be non-zero and must also be less than
+`_postSoftCapMaxBlocks`. `_startBlock` cannot be equal to or less than the
+current block number.
+
+The contract's fallback function is `payable` and triggers the `internal buy`
+function. Thus participating in the ICO only requires sending ETH to the ICO
+contract.
+
+The `buy` function cannot be called by other addresses, and it cannot be called
+while the sale is paused, while outside the ICO block range (I.e., not until
+`startBlock` <= `block.number` < `endBlock`), or with a value of less than 10
+finney. It forwards received funds to `colonyMultisig` and adds the amount sent
+to the user's total amount sent to date and to the total amount raised overall.
+If the soft cap has been reached with the new contribution, it updates
+`endBlock` in accordance with [requirement #2](#req2).
+
+The `claimPurchase` function can only be called by `colonyMultisig` after the
+sale has been finalized. It takes an address as an argument, `_owner`,
+calculates how much CLNY is owed `_owner` based on `TOKEN_PRICE_MULTIPLIER` and
+the amount recorded in `userBuys`, then sends the tokens to the user and zeroes
+out the `_owner` entry in `userBuys`. This puts the multisig in charge of
+distributing tokens to users after the crowdsale, which satisfies [requirement
+#7](#req7).
+
+The `claimVestedTokens` does not take any arguments. It allows the transaction
+sender to claim any token grants they may be entitled to in accordance with
+[requirement #6](#req6) after the ICO has been finalized. It `asserts` that it
+has been six months since the ICO was finalized, calculates how much CLNY is
+owed the caller based on how much time has passed and how much they've already
+claimed, and then sends that amount to the caller.
+
+The `finalize` function may only be called after the ICO sale period has passed,
+if the minimum required amount has been raised, and if the ICO hasn't already
+been finalized. It calculates how much CLNY to mint based on how much ETH was
+raised, in accordance with [requirement #6](#req6). I.e., `totalRaised *
+TOKEN_PRICE_MULTIPLIER * 100 / 51`. It hands off ownership of the contract to
+`colonyMultisig`, immediately transfers the required amount of CLNY to the
+investors, team members 1 & 2, and the strategy fund, and then allocates the
+vesting grants to the rest of the development team's multisig and the
+foundation. Note that the strategy fund does not technically receive 19%, but
+instead receives the remainder of the 49% set aside after all the other
+allocations and transfers have been made. This helps prevent any trouble that
+might have otherwise been caused by mixing percentage-based allocations with
+static allocations.
+
+The `stop` and start functions may only be called by `colonyMultisig`. These
+pause and resume the ICO. Note that pausing the ICO does not extend its length
+at all.
+
+
+## Assumptions
+
+- The `_maxSaleDurationBlocks` constructor parameter passed to `ColonyTokenSale`
+  will correspond to roughly 14 days' worth of blocks.
+
+
+## Findings
+
+- It might be a good idea to replace the hard-coded numbers in
+  `claimVestedTokens` with constants.
+- The Colony multisig receives all ETH funds immediately, so refunds are a
+  trustful process. This may be counter to user expectations, so clear
+  communication around this point is encouraged.
+
+Overall the system is fairly straightforward, well-tested, and should not cause
+any trouble.
+
+
+## Questions to answer pre-delivery
+
+- Have any potential issues with mixing static and percent-based allocations
+  been sufficiently mitigated via the approach in `finalize`?
