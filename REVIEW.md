@@ -2,6 +2,119 @@
 
 Prepared by Ryan Casey \<ryan@dapphub.io\> and Rain \<rain@dapphub.io\>.
 
+### Code Style
+
+The large amount of comments and storage variables are difficult to parse.
+Consider whether the comments are redundant or could be simplified.
+
+There is a mix between British English 's' and American English 'z' in variable,
+event, modifier and function names. Consider standardizing on one of these.
+
+### Modifiers
+
+There are a number of assertive modifiers defined in the core sale contract.
+The `nonZeroAddress` modifier is a nice feature.
+
+Some of these modifiers could be combined together, for example `saleNotStopped`
+could be folded into `saleOpen`.
+
+A pattern to consider here is using a single `canFunctionName` modifier per
+function, which lays out all of the call requirements in one place, for example
+
+```
+modifier canBuy {
+    assert(block.number >= startBlock);
+    assert(block.number < endBlock);
+    assert (!saleStopped);
+    require(msg.value >= MIN_CONTRIBUTION);
+    _
+}
+```
+
+However, this is largely a matter of taste.
+
+
+### Event naming
+
+It is common practice in Solidity development to write events as `EventName`,
+and this convention is followed here. However, we would advise prepending event
+names with `Log`, e.g. `LogEventName`. This makes it very clear to the reader
+when an event is being emitted.
+
+Further, we would consider annotating functions with the `note` modifier from
+[ds-note], making the call history of the contract explicitly clear in the logs.
+
+
+## Usage of Dappsys components
+
+There are two [Dappsys] packages used here: [ds-math] and [ds-token]. We will
+comment on the usage of both of these. First, we will comment on [ds-auth],
+which is not used but easily could be.
+
+### DS-Auth
+
+The reviewed contracts make use of the `Ownable` pattern, which uses the
+`onlyOwner` modifier. Only the `owner` can call functions marked by `onlyOwner`
+and the `owner` can be updated by `changeOwner`.
+
+By default, DS-Auth provides identical functionality: when inheriting from
+`DSAuth`, functions marked with `auth` can only be called by the `owner`, which
+can be updated with `setOwner`.
+
+We suggest the use of DS-Auth as it integrates well with the remainder of
+Dappsys and allows for easy extension to more complex access patterns. However,
+the Ownable pattern does not appear problematic as specifically implemented
+here.
+
+
+### DS-Math
+
+DS-Math is a mixin for simple and overflow-protected math operations.  A variety
+of these operations are used in the reviewed contracts.
+
+DS-Math is used via the [dappsys-monolithic] package. This needs updating to
+the latest version, as there has been an update to ds-math.
+
+The `finalize` function makes heavy use of DS-Math. A common pattern is to
+calculate percentage fractions of an amount, e.g.
+
+```
+uint128 earlyInvestorAllocation = wmul(wdiv(totalSupply, 100), 5);
+```
+
+Note that DS-Math does not protect against loss of precision when chaining
+operations and operation order must still be considered. In the example above,
+there is potential for precision loss by performing `wdiv` before `wmul`.
+However, this is avoided because the implementation uses literal `100` and `5`,
+rather than actual WAD quantities.
+
+We suggest using a decimal fraction literal:
+
+```
+uint128 earlyInvestorAllocation = wmul(totalSupply, 0.05 ether);
+```
+
+which uses the fact that `1 ether == WAD`.
+
+
+
+### DS-Token
+
+`Token.sol` uses the base ERC20 implementation from ds-token, and extends it
+with some storage variables and a `mint` function, with access controlled by the
+`Ownable` pattern.
+
+The implemented contract appears safe. However, we note that the functionality
+is already implemented in ds-token (albeit using ds-auth rather than Ownable).
+
+We would advise against the re-ordering of storage variables as compared with
+ds-token. Specifically, the `resolver` variable is added before the `symbol`,
+`decimals`, `name` variables, which are used in ds-token.
+
+See below for more commentary on `Token.sol`.
+
+
+
 ## Requirements
 
 These are the requirements as collected from [the Colony issue tracker](
@@ -10,24 +123,24 @@ https://github.com/JoinColony/colonySale/issues?q=is%3Aissue).
 1. <a name="req1">Token contract must be upgradable _in-place_. I.e., a multisig
    will be able to arbitrarily change the behavior of the contract at the token
    address.
-   
+
    [Reference](https://github.com/JoinColony/colonySale/issues/1)
    </a>
 2. <a name="req2">The ICO begins at a particular point in time, defined by a
    block number, and ends at the earlier of:
     - 14 days after the start
     - min(24 hours, max(3 hours, time-taken-to-reach-soft-cap)) + start-time
-    
+
     [Reference](https://github.com/JoinColony/colonySale/issues/2#issue-227588904)
    </a>
 3. <a name="req3">CLNY price set at 0.001 ETH, miniumum purchase size of 0.01
    ETH. (I.e., no buying less than 10 CLNY.)
-   
+
    [Reference](https://github.com/JoinColony/colonySale/issues/3)
    </a>
 4. <a name="req4">15 million USD soft cap, based on exchange rate set at time of
    contract deployment.
-   
+
    [Reference](https://github.com/JoinColony/colonySale/issues/4)
    </a>
 5. <a name="req5">Ability to pause and resume the ICO at any time.
@@ -38,7 +151,7 @@ https://github.com/JoinColony/colonySale/issues?q=is%3Aissue).
    early investors (5%), the Colony team (10%), the Colony Foundation (15%), and
    the Colony strategy fund (19%). The Foundation and team shares are to be
    subject to vesting over a 24 month period with a 6 month cliff.
-   
+
    [Reference](https://github.com/JoinColony/colonySale/issues/9)
    </a>
 7. <a name="req7">CLNY must be manually unlocked in order to be transferrable.
@@ -187,11 +300,11 @@ It provides the following public properties:
   See [requirement #2](#req2).
 - `uint postSoftCapMinBlocks`:  The minimum number of blocks to wait after the
   soft cap is reached.
-  
+
   See [requirement #2](#req2).
 - `uint postSoftCapMaxBlocks`:  The maximum number of blocks to wait after the
   soft cap is reached.
-  
+
   See [requirement #2](#req2).)
 - `uint constant TOKEN_PRICE_MULTIPLIER = 1000`: Number of tokens per ETH.
 
@@ -223,33 +336,33 @@ It provides the following public properties:
 - `address TEAM_MEMBER_1`: See [requirement #6](#req6).
 - `address TEAM_MULTISIG`: Takes the remainder of the development team
   allocation after distributions to team members #1 and #2.
-  
+
   See [requirement #6](#req6).
 - `address FOUNDATION`: See [requirement #6](#req6).
 - `address STRATEGY_FUND`: See [requirement #6](#req6).
 - `uint128 constant ALLOCATION_TEAM_MEMBER_ONE = 30 * 10 ** 18`: Amount in CLNY
   wei granted to team member #1.
-  
+
   See [requirement #6](#req6).
 - `uint128 constant ALLOCATION_TEAM_MEMBER_TWO = 80 * 10 ** 18`: Amount in CLNY
   wei granted to team member #2.
-  
+
   See [requirement #6](#req6).
 - `uint128 constant ALLOCATION_TEAM_MEMBERS_TOTAL = 110 * 10 ** 18`: Amount in
   CLNY wei granted to both team members.
-  
+
   See [requirement #6](#req6).
 - `mapping (address => uint) public userBuys`: Keeps track of ether spent by
   each participant.
 - `mapping (address => uint) public tokenGrants`: Keeps track of tokens granted
   to investors, development team members, the Colony Foundation, and the
   strategy fund.
-  
+
   See [requirement #6](#req6).
 - `mapping (address => GrantClaimTotal) public grantClaimTotals`: Keeps track of
   tokens still unclaimed by investors, development team members, the Colony
   Foundation, and the strategy fund.
-  
+
   See [requirement #6](#req6).
 
 The constructor takes eight arguments:
@@ -320,7 +433,6 @@ The `stop` and start functions may only be called by `colonyMultisig`. These
 pause and resume the ICO. Note that pausing the ICO does not extend its length
 at all.
 
-
 ## Assumptions
 
 - The `_maxSaleDurationBlocks` constructor parameter passed to `ColonyTokenSale`
@@ -347,6 +459,17 @@ at all.
 - The Colony multisig receives all ETH funds immediately, so refunds are a
   trustful process. This may be counter to user expectations, so clear
   communication around this point is encouraged.
+- The code could be simplified and made more readable by folding the
+  `tokenGrants` mapping into the `GrantClaimTotal` struct, and renaming the
+  latter to `Grant`.
 
 Overall the system is fairly straightforward, well-tested, and should not cause
 any trouble.
+
+
+[Dappsys]: https://dappsys.info
+[ds-note]: https://github.com/dapphub/ds-note
+[ds-auth]: https://github.com/dapphub/ds-auth
+[ds-math]: https://github.com/dapphub/ds-math
+[ds-token]: https://github.com/dapphub/ds-token
+[dappsys-monolithic]: https://github.com/dapphub/dappsys-monolithic
