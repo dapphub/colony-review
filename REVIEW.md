@@ -49,6 +49,10 @@ when an event is being emitted.
 Further, we would consider annotating functions with the `note` modifier from
 [ds-note], making the call history of the contract explicitly clear in the logs.
 
+### Data Structures
+
+The code could be simplified and made more readable by folding the `tokenGrants`
+mapping into the `GrantClaimTotal` struct, and renaming the latter to `Grant`.
 
 ## Usage of Dappsys components
 
