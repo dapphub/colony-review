@@ -108,13 +108,12 @@ which uses the fact that `1 ether == WAD`.
 Alternately, `uint256` could be used instead of wad math, e.g.
 
 ```
-uint256 totalSupply = div(mul(purchasedSupply, 100), 51);
-...
 uint256 earlyInvestorAllocation = div(mul(totalSupply, 5), 100);
 ```
 
-
-
+provided that `uint256` is used as the base numeric type elsewhere. If
+this course is followed then note an important difference between `mul`
+and `wmul` is that the former truncates whereas the latter rounds.
 
 
 ### DS-Token
