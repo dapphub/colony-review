@@ -464,6 +464,10 @@ at all.
 - The Colony multisig receives all ETH funds immediately, so refunds are a
   trustful process. This may be counter to user expectations, so clear
   communication around this point is encouraged.
+- Per the requirements, CLNY cannot be transferred by buyers (it literally is
+  not even distributed) until the multisig manually intervenes. This means ICO
+  participants must trust that the multisig will give users their CLNY despite
+  having already taken possession of their ETH.
 - The code could be simplified and made more readable by folding the
   `tokenGrants` mapping into the `GrantClaimTotal` struct, and renaming the
   latter to `Grant`.
