@@ -471,6 +471,7 @@ at all.
 - The code could be simplified and made more readable by folding the
   `tokenGrants` mapping into the `GrantClaimTotal` struct, and renaming the
   latter to `Grant`.
+- Dappsys should be upgraded to the latest version
 
 Overall the system is fairly straightforward, well-tested, and should not cause
 any trouble.
