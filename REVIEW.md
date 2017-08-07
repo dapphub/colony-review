@@ -2,7 +2,12 @@
 
 Prepared by Ryan Casey \<ryan@dapphub.io\> and Rain \<rain@dapphub.io\>.
 
-### Code Style
+
+TODO: ordering of sections
+
+## Code Style
+
+### Readability
 
 The large amount of comments and storage variables are difficult to parse.
 Consider whether the comments are redundant or could be simplified.
