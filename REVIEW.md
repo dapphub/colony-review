@@ -1,9 +1,58 @@
-# Colony Code Review
+# Colony Sale Code Review
 
 Prepared by Ryan Casey \<ryan@dapphub.io\> and Rain \<rain@dapphub.io\>.
 
 
 TODO: ordering of sections
+
+## Scope
+
+The web application which interacts with the smart contracts is considered out
+of scope. This code review is only concerned with the following files:
+
+1. ColonyTokenSale.sol
+2. EtherRouter.sol
+3. Migrations.sol
+4. Ownable.sol
+5. Resolver.sol
+6. Token.sol
+
+The code above makes use of the `ds-math` and `ds-erc20`
+[dappsys](https://github.com/dapphub/dappsys) libraries of smart contracts,
+as well as a custom Token contract combining parts of the `DSToken` and
+`DSTokenBase` contracts from the `ds-token` library.
+
+## Findings
+
+- Due to the lack of a price feed, the actual soft cap and minimum raise
+  amounts will almost certainly differ from the amounts given in the
+  requirements. The degree to which the actual raise differs depends on
+  ETH volatility. It may be a good idea to communicate in terms of actual ETH
+  amounts once the ICO has begun.
+- It might be a good idea to replace the hard-coded numbers in
+  `claimVestedTokens` with constants.
+- The Colony multisig receives all ETH funds immediately, so refunds are a
+  trustful process. This may be counter to user expectations, so clear
+  communication around this point is encouraged.
+- Per the requirements, CLNY cannot be transferred by buyers (it literally is
+  not even distributed) until the multisig manually intervenes. This means ICO
+  participants must trust that the multisig will give users their CLNY despite
+  having already taken possession of their ETH.
+- The code could be simplified and made more readable by folding the
+  `tokenGrants` mapping into the `GrantClaimTotal` struct, and renaming the
+  latter to `Grant`.
+- Dappsys should be upgraded to the latest version
+
+Overall the system is fairly straightforward, well-tested, and should not cause
+any trouble.
+
+
+[Dappsys]: https://dappsys.info
+[ds-note]: https://github.com/dapphub/ds-note
+[ds-auth]: https://github.com/dapphub/ds-auth
+[ds-math]: https://github.com/dapphub/ds-math
+[ds-token]: https://github.com/dapphub/ds-token
+[dappsys-monolithic]: https://github.com/dapphub/dappsys-monolithic
 
 ## Code Style
 
@@ -13,7 +62,7 @@ The large amount of comments and storage variables are difficult to parse.
 Consider whether the comments are redundant or could be simplified.
 
 There is a mix between British English 's' and American English 'z' in variable,
-event, modifier and function names. Consider standardizing on one of these.
+event, modifier and function names. Please standardize on one of these.
 
 ### Modifiers
 
@@ -48,6 +97,12 @@ when an event is being emitted.
 
 Further, we would consider annotating functions with the `note` modifier from
 [ds-note], making the call history of the contract explicitly clear in the logs.
+
+### Arguments
+
+`_owner` is used several times as an argument name, which is easily
+confused with the `owner` variable. `_user` would be a more descriptive
+and less confusing name choice.
 
 ### Data Structures
 
@@ -133,7 +188,7 @@ See below for more commentary on `Token.sol`.
 
 
 
-## Requirements
+## Requirements Overview
 
 These are the requirements as collected from [the Colony issue tracker](
 https://github.com/JoinColony/colonySale/issues?q=is%3Aissue).
@@ -182,31 +237,7 @@ https://github.com/JoinColony/colonySale/issues?q=is%3Aissue).
    </a>
 
 
-## Scope
-
-The web application which interacts with the smart contracts is considered out
-of scope. This code review is only concerned with the following files:
-
-1. ColonyTokenSale.sol
-2. EtherRouter.sol
-3. Migrations.sol
-4. Ownable.sol
-5. Resolver.sol
-6. Token.sol
-
-The code above makes use of the `ds-math` and `ds-erc20`
-[dappsys](https://github.com/dapphub/dappsys) libraries of smart contracts,
-as well as a custom Token contract combining parts of the `DSToken` and
-`DSTokenBase` contracts from the `ds-token` library.
-
-
-## Review
-
-This review will consist of a quick overview of test coverage, a file-by-file
-commentary, and finally an overview of our conclusions and recommendations.
-
-
-### Test Coverage
+## Test Coverage
 
 Based on the output of the `gulp test:contracts:coverage` command, all lines of
 code are covered with tests. There are 82 tests in total. The tests use the
@@ -218,14 +249,14 @@ been a little better. Still, the level of test coverage is in itself quite
 impressive and bodes well for this project.
 
 
-### Migrations.sol
+## Migrations.sol
 
 Contains a contract called `Migrations` which is only used by Truffle for its
 own purposes. As this contract is not in any way part of the system under
 review, we are ignoring it.
 
 
-### Ownable.sol
+## Ownable.sol
 
 Contains a contract called `Ownable` which is meant to be used as a mix-in. It
 provides a `public address owner` property which gets automatically set to
@@ -465,34 +496,3 @@ at all.
   will correspond to roughly 15 million USD worth of ether.
 
 
-## Findings
-
-- Due to the lack of a price feed, the actual soft cap and minimum raise
-  amounts will almost certainly differ from the amounts given in the
-  requirements. The degree to which the actual raise differs depends on
-  ETH volatility. It may be a good idea to communicate in terms of actual ETH
-  amounts once the ICO has begun.
-- It might be a good idea to replace the hard-coded numbers in
-  `claimVestedTokens` with constants.
-- The Colony multisig receives all ETH funds immediately, so refunds are a
-  trustful process. This may be counter to user expectations, so clear
-  communication around this point is encouraged.
-- Per the requirements, CLNY cannot be transferred by buyers (it literally is
-  not even distributed) until the multisig manually intervenes. This means ICO
-  participants must trust that the multisig will give users their CLNY despite
-  having already taken possession of their ETH.
-- The code could be simplified and made more readable by folding the
-  `tokenGrants` mapping into the `GrantClaimTotal` struct, and renaming the
-  latter to `Grant`.
-- Dappsys should be upgraded to the latest version
-
-Overall the system is fairly straightforward, well-tested, and should not cause
-any trouble.
-
-
-[Dappsys]: https://dappsys.info
-[ds-note]: https://github.com/dapphub/ds-note
-[ds-auth]: https://github.com/dapphub/ds-auth
-[ds-math]: https://github.com/dapphub/ds-math
-[ds-token]: https://github.com/dapphub/ds-token
-[dappsys-monolithic]: https://github.com/dapphub/dappsys-monolithic
