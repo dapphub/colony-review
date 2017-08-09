@@ -548,8 +548,8 @@ could be off from this by a small amount.
 
 DS-Math unsigned subtraction will revert if the result would overflow. This
 could occur in the evaluation of `tRA`, i.e. if `tTA < 110 . 10^18`. Working
-backwards we obtain `tR < 0.561 . 10^18`, i.e. *`finalize` will revert if the
-total raise is less than 0.561 ether*.
+backwards we obtain `tR < 0.561 . 10^18`, i.e. **`finalize` will revert if the
+total raise is less than 0.561 ether**.
 
 
 ## Assumptions
