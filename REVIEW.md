@@ -2,9 +2,6 @@
 
 Prepared by Ryan Casey \<ryan@dapphub.io\> and Rain \<rain@dapphub.io\>.
 
-
-TODO: ordering of sections
-
 ## Scope
 
 The web application which interacts with the smart contracts is considered out
@@ -41,7 +38,9 @@ as well as a custom Token contract combining parts of the `DSToken` and
 - The code could be simplified and made more readable by folding the
   `tokenGrants` mapping into the `GrantClaimTotal` struct, and renaming the
   latter to `Grant`.
-- Dappsys should be upgraded to the latest version
+- Dappsys components should be upgraded to their latest version.
+- Solidity v0.4.15 or greater should be used to compile the production
+  contracts, due to a bug in `delegatecall` in earlier versions.
 
 Overall the system is fairly straightforward, well-tested, and should not cause
 any trouble.
@@ -53,62 +52,6 @@ any trouble.
 [ds-math]: https://github.com/dapphub/ds-math
 [ds-token]: https://github.com/dapphub/ds-token
 [dappsys-monolithic]: https://github.com/dapphub/dappsys-monolithic
-
-## Code Style
-
-### Readability
-
-The large amount of comments and storage variables are difficult to parse.
-Consider whether the comments are redundant or could be simplified.
-
-There is a mix between British English 's' and American English 'z' in variable,
-event, modifier and function names. Please standardize on one of these.
-
-### Modifiers
-
-There are a number of assertive modifiers defined in the core sale contract.
-The `nonZeroAddress` modifier is a nice feature and we note that
-https://github.com/ethereum/solidity/issues/2621 is fixed as of solc v0.4.14.
-
-Some of these modifiers could be combined together, for example `saleNotStopped`
-could be folded into `saleOpen`.
-
-A pattern to consider here is using a single `canFunctionName` modifier per
-function, which lays out all of the call requirements in one place, for example
-
-```
-modifier canBuy {
-    assert(block.number >= startBlock);
-    assert(block.number < endBlock);
-    assert (!saleStopped);
-    require(msg.value >= MIN_CONTRIBUTION);
-    _
-}
-```
-
-However, this is largely a matter of taste.
-
-
-### Event naming
-
-It is common practice in Solidity development to write events as `EventName`,
-and this convention is followed here. However, we would advise prepending event
-names with `Log`, e.g. `LogEventName`. This makes it very clear to the reader
-when an event is being emitted.
-
-Further, we would consider annotating functions with the `note` modifier from
-[ds-note], making the call history of the contract explicitly clear in the logs.
-
-### Arguments
-
-`_owner` is used several times as an argument name, which is easily
-confused with the `owner` variable. `_user` would be a more descriptive
-and less confusing name choice.
-
-### Data Structures
-
-The code could be simplified and made more readable by folding the `tokenGrants`
-mapping into the `GrantClaimTotal` struct, and renaming the latter to `Grant`.
 
 ## Usage of Dappsys components
 
@@ -226,8 +169,73 @@ contract Resolved {
 contract Token is Resolved, DSToken {}
 ```
 
-See below for more commentary on `Token.sol`.
 
+## Code Style
+
+### Readability
+
+The large amount of comments and storage variables are difficult to parse.
+Consider whether the comments are redundant or could be simplified.
+
+There is a mix between British English 's' and American English 'z' in variable,
+event, modifier and function names. Please standardize on one of these.
+
+### Modifiers
+
+There are a number of assertive modifiers defined in the core sale contract.
+The `nonZeroAddress` modifier is a nice feature and we note that
+https://github.com/ethereum/solidity/issues/2621 is fixed as of solc v0.4.14.
+
+Some of these modifiers could be combined together, for example `saleNotStopped`
+could be folded into `saleOpen`.
+
+A pattern to consider here is using a single `canFunctionName` modifier per
+function, which lays out all of the call requirements in one place, for example
+
+```
+modifier canBuy {
+    assert(block.number >= startBlock);
+    assert(block.number < endBlock);
+    assert (!saleStopped);
+    require(msg.value >= MIN_CONTRIBUTION);
+    _
+}
+```
+
+However, this is largely a matter of taste.
+
+
+### Event naming
+
+It is common practice in Solidity development to write events as `EventName`,
+and this convention is followed here. However, we would advise prepending event
+names with `Log`, e.g. `LogEventName`. This makes it very clear to the reader
+when an event is being emitted.
+
+Further, we would consider annotating functions with the `note` modifier from
+[ds-note], making the call history of the contract explicitly clear in the logs.
+
+### Arguments
+
+`_owner` is used several times as an argument name, which is easily
+confused with the `owner` variable. `_user` would be a more descriptive
+and less confusing name choice.
+
+### Data Structures
+
+The code could be simplified and made more readable by folding the `tokenGrants`
+mapping into the `GrantClaimTotal` struct, and renaming the latter to `Grant`.
+
+## Test Coverage
+
+Based on the output of the `gulp test:contracts:coverage` command, all lines of
+code are covered with tests. There are 82 tests in total. The tests use the
+Truffle framework and are written in Javascript, which can be somewhat dangerous
+due to [the potential difficulties in passing data between the
+two](https://blog.rexmls.com/the-solution-a2eddbda1a5d). A combination of
+Solidity and Javascript tests, or even just Solidity tests alone, would have
+been a little better. Still, the level of test coverage is in itself quite
+impressive and bodes well for this project.
 
 
 ## Requirements Overview
@@ -277,18 +285,6 @@ https://github.com/JoinColony/colonySale/issues?q=is%3Aissue).
 
    [Reference](https://github.com/JoinColony/colonySale/issues/10)
    </a>
-
-
-## Test Coverage
-
-Based on the output of the `gulp test:contracts:coverage` command, all lines of
-code are covered with tests. There are 82 tests in total. The tests use the
-Truffle framework and are written in Javascript, which can be somewhat dangerous
-due to [the potential difficulties in passing data between the
-two](https://blog.rexmls.com/the-solution-a2eddbda1a5d). A combination of
-Solidity and Javascript tests, or even just Solidity tests alone, would have
-been a little better. Still, the level of test coverage is in itself quite
-impressive and bodes well for this project.
 
 
 ## Migrations.sol
@@ -354,24 +350,13 @@ otherwise straightforward. It does not appear to pose any problems.
 
 ## Token.sol
 
-Contains a contract called `Token`, which is mostly just a mash-up of the
-`DSToken` and `DSTokenBase` contracts from the `ds-token` library. It defines a
-few redundant public properties, which we recommend removing:
+Contains a contract called `Token`, which is an extension of the `DSTokenBase`
+contract with the `mint` function from `DSToken`, modified to use `Ownable`
+rather than `DSAuth`, some standard token attributes, and an `address resolver`
+attribute.
 
-- symbol
-- decimals
-- name
-- resolver
-
-These properties are not set or used anywhere and would be occluded by the
-properties on the `EtherRouter` contract anyway.
-
-`Token` provides implementations of the ERC20 functions, as well as a `mint`
-function which `owner` may use to issue tokens.
-
-This is a short and simple contract which leverages the `ds-math`, `ds-erc20`,
-and (to a lesser degree) `ds-token` libraries to minimize the risk of
-introducing exploits.
+We recommend simplifying this contract to avoid repeating `DSTokenBase`, as
+noted above.
 
 
 ## ColonyTokenSale.sol
@@ -381,7 +366,11 @@ and most of the requirements laid out in this document. It inherits from
 `DSMath`, giving it access to overflow-protected math operations, and it wraps a
 `Token` contract.
 
-It provides the following public properties:
+The usage of `DSMath` is commented on above.
+
+### Requirements Satisfaction
+
+`ColonyTokenSale` provides the following public properties:
 
 - `uint startBlock`: The block at which the ICO begins.
 
@@ -525,6 +514,44 @@ pause and resume the ICO. Note that pausing the ICO does not extend its length
 at all.
 
 
+### Review
+
+The `finalize` logic can be given as
+
+```
+pS = tR . 1000
+tS = pS . 100 / 51
+
+eIA = tS .  5 / 100
+tTA = tS . 10 / 100
+fA  = tS . 15 / 100
+
+tRA = tTA - 110 . 10^18
+sFA = tS - (eIA + tTA + fA + pS)
+
+mint(tS)
+push(iN1, eIA)
+push(tM1, 30 . 10^18)
+push(tM2, 80 . 10^18)
+push(sF, sFA)
+
+tG[tM] = tRA
+tG[f]  = fA
+```
+
+where camelCase variable names are contracted to single letter abbreviations,
+`mint => token.mint` and `push => token.transfer`.
+
+Any off-by-one-wei division rounding errors are compensated for by the
+definition of `sFA`, which analytically evaluates to `sFA = tS . 19 / 100`, but
+could be off from this by a small amount.
+
+DS-Math unsigned subtraction will revert if the result would overflow. This
+could occur in the evaluation of `tRA`, i.e. if `tTA < 110 . 10^18`. Working
+backwards we obtain `tR < 0.561 . 10^18`, i.e. *`finalize` will revert if the
+total raise is less than 0.561 ether*.
+
+
 ## Assumptions
 
 - The `_maxSaleDurationBlocks` constructor parameter passed to `ColonyTokenSale`
@@ -537,5 +564,3 @@ at all.
   will correspond to roughly 5 million USD worth of ether.
 - The `_softCap` constructor parameter passed to `ColonyTokenSale`
   will correspond to roughly 15 million USD worth of ether.
-
-
