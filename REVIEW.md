@@ -350,6 +350,22 @@ Solidity compiler: `DelegateCallReturnValue`. **As a precaution we strongly
 recommend deploying the production contracts with solc v0.4.15 or later**.
 
 
+### Alternative Architecture
+
+We will briefly mention an alternative to an upgradeable token here, whilst
+understanding the business requirements that have led to the current design.
+
+Dapphub considers `DSToken` to be a 'box' - that is, a well defined and isolated
+component that should not be extended or overridden. Excepting formal
+specification and/or direct bytecode implementation we see `DSToken` as very
+mature. However, if an upgrade was needed for some reason `DSToken` provides
+`stop` and `start`, allowing for the blocking of stateful operations. A
+distributor would then be used to initialize balances in the new token.
+
+Persistent addressing would be solved by a solution like ENS, e.g.
+`colony-token.eth` would resolve to the current token address.
+
+
 ## Token.sol
 
 Contains a contract called `Token`, which is an extension of the `DSTokenBase`
