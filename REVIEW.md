@@ -358,7 +358,7 @@ understanding the business requirements that have led to the current design.
 Dapphub considers `DSToken` to be a 'box' - that is, a well defined and isolated
 component that should not be extended or overridden. Excepting formal
 specification and/or direct bytecode implementation we see `DSToken` as very
-mature. However, if an upgrade was needed for some reason `DSToken` provides
+mature. However, if an upgrade were needed for some reason `DSToken` provides
 `stop` and `start`, allowing for the blocking of stateful operations. A
 distributor would then be used to initialize balances in the new token.
 
