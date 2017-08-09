@@ -565,6 +565,35 @@ variable, used by the `raisedMinimumAmount` modifier, which will cause
 `finalize` to revert if the total raise is not high enough.
 
 
+### Data Simplification
+
+The data structures around 'grants' are currently:
+
+```
+mapping (address => uint128) public tokenGrants;
+struct GrantClaimTotal {
+    uint64 monthsClaimed;
+    uint128 totalClaimed;
+}
+mapping (address => GrantClaimTotal) public grantClaimTotals;
+```
+
+This could be simplified:
+
+```
+struct Grant {
+    uint128 totalGranted;
+    uint128 totalClaimed;
+    uint64  monthsClaimed;
+}
+
+mapping (address => Grant) public grants;
+```
+
+leading to slightly simpler code. This isn't necessary however, and the public
+`tokenGrants` does provide an automatic getter function.
+
+
 ## Assumptions
 
 - The `_maxSaleDurationBlocks` constructor parameter passed to `ColonyTokenSale`
