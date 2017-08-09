@@ -39,6 +39,7 @@ as well as a custom Token contract combining parts of the `DSToken` and
   `tokenGrants` mapping into the `GrantClaimTotal` struct, and renaming the
   latter to `Grant`.
 - Dappsys components should be upgraded to their latest version.
+- Consider replacing `Ownable` with `DSAuth`, for consistency with Dappsys.
 - Solidity v0.4.15 or greater should be used to compile the production
   contracts, due to a bug in `delegatecall` in earlier versions.
 
@@ -347,6 +348,10 @@ This is the top-level contract which allows in-place upgrading, in accordance
 with [requirement #1](#req1). It uses a few lines of inline assembly, but is
 otherwise straightforward. It does not appear to pose any problems.
 
+This contract uses `delegatecall`, which is subject to a recent bug in the
+Solidity compiler: `DelegateCallReturnValue`. **As a precaution we strongly
+recommend deploying the production contracts with solc v0.4.15 or later**.
+
 
 ## Token.sol
 
@@ -549,7 +554,15 @@ could be off from this by a small amount.
 DS-Math unsigned subtraction will revert if the result would overflow. This
 could occur in the evaluation of `tRA`, i.e. if `tTA < 110 . 10^18`. Working
 backwards we obtain `tR < 0.561 . 10^18`, i.e. **`finalize` will revert if the
-total raise is less than 0.561 ether**.
+total raise is less than 0.561 ether**. Owing to the `buy` behaviour of sending
+all received ether directly to a standard multisig, the low monetary value of
+half an ether and the current ICO climate, we see this as a low severity issue.
+However, it is not clear that this code path was anticipated in the contract
+design.
+
+Note that this behaviour is related to, but separate from, the `minToRaise`
+variable, used by the `raisedMinimumAmount` modifier, which will cause
+`finalize` to revert if the total raise is not high enough.
 
 
 ## Assumptions
