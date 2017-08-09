@@ -67,7 +67,8 @@ event, modifier and function names. Please standardize on one of these.
 ### Modifiers
 
 There are a number of assertive modifiers defined in the core sale contract.
-The `nonZeroAddress` modifier is a nice feature.
+The `nonZeroAddress` modifier is a nice feature and we note that
+https://github.com/ethereum/solidity/issues/2621 is fixed as of solc v0.4.14.
 
 Some of these modifiers could be combined together, for example `saleNotStopped`
 could be folded into `saleOpen`.
@@ -180,9 +181,50 @@ with some storage variables and a `mint` function, with access controlled by the
 The implemented contract appears safe. However, we note that the functionality
 is already implemented in ds-token (albeit using ds-auth rather than Ownable).
 
-We would advise against the re-ordering of storage variables as compared with
-ds-token. Specifically, the `resolver` variable is added before the `symbol`,
-`decimals`, `name` variables, which are used in ds-token.
+We note that the re-ordering of storage variables is needed for use with
+the `EtherRouter`.
+
+It is possible to write this contract with less duplication of `DSTokenBase`:
+
+```
+import "./dappsys/base.sol";
+import "./Ownable.sol";
+
+
+contract Resolved {
+    address resolver;
+}
+
+
+contract TokenLike {
+    bytes32 public symbol;
+    uint256 public decimals;
+    bytes32 public name;
+}
+
+
+contract Token is Ownable, Resolved, TokenLike, DSTokenBase(0) {
+    function mint(uint128 wad)
+    onlyOwner
+    {
+        _balances[msg.sender] = add(_balances[msg.sender], wad);
+        _supply = add(_supply, wad);
+    }
+}
+```
+
+Using `DSToken`, with `DSAuth` as the ownership pattern, this can be reduced
+further:
+
+```
+import "./dappsys/token.sol";
+
+contract Resolved {
+    address resolver;
+}
+
+contract Token is Resolved, DSToken {}
+```
 
 See below for more commentary on `Token.sol`.
 
@@ -481,6 +523,7 @@ static allocations.
 The `stop` and start functions may only be called by `colonyMultisig`. These
 pause and resume the ICO. Note that pausing the ICO does not extend its length
 at all.
+
 
 ## Assumptions
 
