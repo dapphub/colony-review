@@ -35,9 +35,6 @@ as well as a custom Token contract combining parts of the `DSToken` and
   not even distributed) until the multisig manually intervenes. This means ICO
   participants must trust that the multisig will give users their CLNY despite
   having already taken possession of their ETH.
-- The code could be simplified and made more readable by folding the
-  `tokenGrants` mapping into the `GrantClaimTotal` struct, and renaming the
-  latter to `Grant`.
 - Dappsys components should be upgraded to their latest version.
 - Consider replacing `Ownable` with `DSAuth`, for consistency with Dappsys.
 - Solidity v0.4.15 or greater should be used to compile the production
