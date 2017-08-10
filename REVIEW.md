@@ -629,7 +629,6 @@ distributor would then be used to initialize balances in the new token.
 Persistent addressing would be solved by a solution like ENS, e.g.
 `colony-token.eth` would resolve to the current token address.
 
-
 To illustrate the shift from inheritance-driven to container-driven
 design, consider the following example of a token that can be locked up.
 
@@ -673,8 +672,8 @@ contract TokenLocker {
     }
 
     function free(uint wad) {
-        deposits[msg.sender] = sub(deposits[msg.sender], wad);
         token.transfer(msg.sender, wad);
+        deposits[msg.sender] = sub(deposits[msg.sender], wad);
     }
 }
 ```
