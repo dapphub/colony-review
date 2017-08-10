@@ -1,6 +1,6 @@
 # Colony Sale Code Review
 
-Prepared by Ryan Casey \<ryan@dapphub.io\> and Rain \<rain@dapphub.io\>.
+Prepared by Ryan Casey \<ryan@dapphub.com\> and Rain \<rain@dapphub.com\>.
 
 ## Scope
 
