@@ -55,121 +55,53 @@ any trouble.
 [ds-token]: https://github.com/dapphub/ds-token
 [dappsys-monolithic]: https://github.com/dapphub/dappsys-monolithic
 
-## Usage of Dappsys components
+## Requirements Overview
 
-There are two [Dappsys] packages used here: [ds-math] and [ds-token]. We will
-comment on the usage of both of these. First, we will comment on [ds-auth],
-which is not used but easily could be.
+These are the requirements as collected from [the Colony issue tracker](
+https://github.com/JoinColony/colonySale/issues?q=is%3Aissue).
 
-### DS-Auth
+1. <a name="req1">Token contract must be upgradable _in-place_. I.e., a multisig
+   will be able to arbitrarily change the behavior of the contract at the token
+   address.
 
-The reviewed contracts make use of the `Ownable` pattern, which uses the
-`onlyOwner` modifier. Only the `owner` can call functions marked by `onlyOwner`
-and the `owner` can be updated by `changeOwner`.
+   [Reference](https://github.com/JoinColony/colonySale/issues/1)
+   </a>
+2. <a name="req2">The ICO begins at a particular point in time, defined by a
+   block number, and ends at the earlier of:
+    - 14 days after the start
+    - min(24 hours, max(3 hours, time-taken-to-reach-soft-cap)) + start-time
 
-By default, DS-Auth provides identical functionality: when inheriting from
-`DSAuth`, functions marked with `auth` can only be called by the `owner`, which
-can be updated with `setOwner`.
+    [Reference](https://github.com/JoinColony/colonySale/issues/2#issue-227588904)
+   </a>
+3. <a name="req3">CLNY price set at 0.001 ETH, miniumum purchase size of 0.01
+   ETH. (I.e., no buying less than 10 CLNY.)
 
-We suggest the use of DS-Auth as it integrates well with the remainder of
-Dappsys and allows for easy extension to more complex access patterns. However,
-the Ownable pattern does not appear problematic as specifically implemented
-here.
+   [Reference](https://github.com/JoinColony/colonySale/issues/3)
+   </a>
+4. <a name="req4">15 million USD soft cap, based on exchange rate set at time of
+   contract deployment.
 
+   [Reference](https://github.com/JoinColony/colonySale/issues/4)
+   </a>
+5. <a name="req5">Ability to pause and resume the ICO at any time.
 
-### DS-Math
+   [Reference](https://github.com/JoinColony/colonySale/issues/5)
+   </a>
+6. <a name="req6">49% of the CLNY tokens are to be retained and divided among
+   early investors (5%), the Colony team (10%), the Colony Foundation (15%), and
+   the Colony strategy fund (19%). The Foundation and team shares are to be
+   subject to vesting over a 24 month period with a 6 month cliff.
 
-DS-Math is a mixin for simple and overflow-protected math operations.  A variety
-of these operations are used in the reviewed contracts.
+   [Reference](https://github.com/JoinColony/colonySale/issues/9)
+   </a>
+7. <a name="req7">CLNY must be manually unlocked in order to be transferrable.
 
-DS-Math is used via the [dappsys-monolithic] package. This needs updating to
-the latest version, as there has been an update to ds-math.
+   [Reference](https://github.com/JoinColony/colonySale/issues/7)
+   </a>
+8. <a name="req8">Allow for refunds if less than 5 million USD is raised.
 
-The `finalize` function makes heavy use of DS-Math. A common pattern is to
-calculate percentage fractions of an amount, e.g.
-
-```
-uint128 earlyInvestorAllocation = wmul(wdiv(totalSupply, 100), 5);
-```
-
-Note that DS-Math does not protect against loss of precision when chaining
-operations and operation order must still be considered. In the example above,
-there is potential for precision loss by performing `wdiv` before `wmul`.
-However, this is avoided because the implementation uses literal `100` and `5`,
-rather than actual WAD quantities.
-
-We suggest using a decimal fraction literal:
-
-```
-uint128 earlyInvestorAllocation = wmul(totalSupply, 0.05 ether);
-```
-
-which uses the fact that `1 ether == WAD`.
-
-Alternately, `uint256` could be used instead of wad math, e.g.
-
-```
-uint256 earlyInvestorAllocation = div(mul(totalSupply, 5), 100);
-```
-
-provided that `uint256` is used as the base numeric type elsewhere. If
-this course is followed then note an important difference between `mul`
-and `wmul` is that the former truncates whereas the latter rounds.
-
-
-### DS-Token
-
-`Token.sol` uses the base ERC20 implementation from ds-token, and extends it
-with some storage variables and a `mint` function, with access controlled by the
-`Ownable` pattern.
-
-The implemented contract appears safe. However, we note that the functionality
-is already implemented in ds-token (albeit using ds-auth rather than Ownable).
-
-We note that the re-ordering of storage variables is needed for use with
-the `EtherRouter`.
-
-It is possible to write this contract with less duplication of `DSTokenBase`:
-
-```
-import "./dappsys/base.sol";
-import "./Ownable.sol";
-
-
-contract Resolved {
-    address resolver;
-}
-
-
-contract TokenLike {
-    bytes32 public symbol;
-    uint256 public decimals;
-    bytes32 public name;
-}
-
-
-contract Token is Ownable, Resolved, TokenLike, DSTokenBase(0) {
-    function mint(uint128 wad)
-    onlyOwner
-    {
-        _balances[msg.sender] = add(_balances[msg.sender], wad);
-        _supply = add(_supply, wad);
-    }
-}
-```
-
-Using `DSToken`, with `DSAuth` as the ownership pattern, this can be reduced
-further:
-
-```
-import "./dappsys/token.sol";
-
-contract Resolved {
-    address resolver;
-}
-
-contract Token is Resolved, DSToken {}
-```
+   [Reference](https://github.com/JoinColony/colonySale/issues/10)
+   </a>
 
 
 ## Code Style
@@ -240,55 +172,6 @@ been a little better. Still, the level of test coverage is in itself quite
 impressive and bodes well for this project.
 
 
-## Requirements Overview
-
-These are the requirements as collected from [the Colony issue tracker](
-https://github.com/JoinColony/colonySale/issues?q=is%3Aissue).
-
-1. <a name="req1">Token contract must be upgradable _in-place_. I.e., a multisig
-   will be able to arbitrarily change the behavior of the contract at the token
-   address.
-
-   [Reference](https://github.com/JoinColony/colonySale/issues/1)
-   </a>
-2. <a name="req2">The ICO begins at a particular point in time, defined by a
-   block number, and ends at the earlier of:
-    - 14 days after the start
-    - min(24 hours, max(3 hours, time-taken-to-reach-soft-cap)) + start-time
-
-    [Reference](https://github.com/JoinColony/colonySale/issues/2#issue-227588904)
-   </a>
-3. <a name="req3">CLNY price set at 0.001 ETH, miniumum purchase size of 0.01
-   ETH. (I.e., no buying less than 10 CLNY.)
-
-   [Reference](https://github.com/JoinColony/colonySale/issues/3)
-   </a>
-4. <a name="req4">15 million USD soft cap, based on exchange rate set at time of
-   contract deployment.
-
-   [Reference](https://github.com/JoinColony/colonySale/issues/4)
-   </a>
-5. <a name="req5">Ability to pause and resume the ICO at any time.
-
-   [Reference](https://github.com/JoinColony/colonySale/issues/5)
-   </a>
-6. <a name="req6">49% of the CLNY tokens are to be retained and divided among
-   early investors (5%), the Colony team (10%), the Colony Foundation (15%), and
-   the Colony strategy fund (19%). The Foundation and team shares are to be
-   subject to vesting over a 24 month period with a 6 month cliff.
-
-   [Reference](https://github.com/JoinColony/colonySale/issues/9)
-   </a>
-7. <a name="req7">CLNY must be manually unlocked in order to be transferrable.
-
-   [Reference](https://github.com/JoinColony/colonySale/issues/7)
-   </a>
-8. <a name="req8">Allow for refunds if less than 5 million USD is raised.
-
-   [Reference](https://github.com/JoinColony/colonySale/issues/10)
-   </a>
-
-
 ## Migrations.sol
 
 Contains a contract called `Migrations` which is only used by Truffle for its
@@ -354,22 +237,6 @@ Solidity compiler: `DelegateCallReturnValue`. **As a precaution we strongly
 recommend deploying the production contracts with solc v0.4.15 or later**.
 
 
-### Alternative Architecture
-
-We will briefly mention an alternative to an upgradeable token here, whilst
-understanding the business requirements that have led to the current design.
-
-Dapphub considers `DSToken` to be a 'box' - that is, a well defined and isolated
-component that should not be extended or overridden. Excepting formal
-specification and/or direct bytecode implementation we see `DSToken` as very
-mature. However, if an upgrade were needed for some reason `DSToken` provides
-`stop` and `start`, allowing for the blocking of stateful operations. A
-distributor would then be used to initialize balances in the new token.
-
-Persistent addressing would be solved by a solution like ENS, e.g.
-`colony-token.eth` would resolve to the current token address.
-
-
 ## Token.sol
 
 Contains a contract called `Token`, which is an extension of the `DSTokenBase`
@@ -380,6 +247,58 @@ attribute.
 We recommend simplifying this contract to avoid repeating `DSTokenBase`, as
 noted above.
 
+`Token.sol` uses the base ERC20 implementation from ds-token, and extends it
+with some storage variables and a `mint` function, with access controlled by the
+`Ownable` pattern.
+
+The implemented contract appears safe. However, we note that the functionality
+is already implemented in ds-token (albeit using ds-auth rather than Ownable).
+
+We note that the re-ordering of storage variables is needed for use with
+the `EtherRouter`.
+
+It is possible to write this contract with less duplication of `DSTokenBase`:
+
+```
+import "./dappsys/base.sol";
+import "./Ownable.sol";
+
+
+contract Resolved {
+    address resolver;
+}
+
+
+contract TokenLike {
+    bytes32 public symbol;
+    uint256 public decimals;
+    bytes32 public name;
+}
+
+
+contract Token is Ownable, Resolved, TokenLike, DSTokenBase(0) {
+    function mint(uint128 wad)
+    onlyOwner
+    {
+        _balances[msg.sender] = add(_balances[msg.sender], wad);
+        _supply = add(_supply, wad);
+    }
+}
+```
+
+Using `DSToken`, with `DSAuth` as the ownership pattern, this can be reduced
+further:
+
+```
+import "./dappsys/token.sol";
+
+contract Resolved {
+    address resolver;
+}
+
+contract Token is Resolved, DSToken {}
+```
+
 
 ## ColonyTokenSale.sol
 
@@ -388,7 +307,46 @@ and most of the requirements laid out in this document. It inherits from
 `DSMath`, giving it access to overflow-protected math operations, and it wraps a
 `Token` contract.
 
-The usage of `DSMath` is commented on above.
+
+### DS-Math
+
+DS-Math is a mixin for simple and overflow-protected math operations.  A variety
+of these operations are used in the reviewed contracts.
+
+DS-Math is used via the [dappsys-monolithic] package. This needs updating to
+the latest version, as there has been an update to ds-math.
+
+The `finalize` function makes heavy use of DS-Math. A common pattern is to
+calculate percentage fractions of an amount, e.g.
+
+```
+uint128 earlyInvestorAllocation = wmul(wdiv(totalSupply, 100), 5);
+```
+
+Note that DS-Math does not protect against loss of precision when chaining
+operations and operation order must still be considered. In the example above,
+there is potential for precision loss by performing `wdiv` before `wmul`.
+However, this is avoided because the implementation uses literal `100` and `5`,
+rather than actual WAD quantities.
+
+We suggest using a decimal fraction literal:
+
+```
+uint128 earlyInvestorAllocation = wmul(totalSupply, 0.05 ether);
+```
+
+which uses the fact that `1 ether == WAD`.
+
+Alternately, `uint256` could be used instead of wad math, e.g.
+
+```
+uint256 earlyInvestorAllocation = div(mul(totalSupply, 5), 100);
+```
+
+provided that `uint256` is used as the base numeric type elsewhere. If
+this course is followed then note an important difference between `mul`
+and `wmul` is that the former truncates whereas the latter rounds.
+
 
 ### Requirements Satisfaction
 
@@ -623,3 +581,41 @@ leading to slightly simpler code. This isn't necessary however, and the public
   will correspond to roughly 5 million USD worth of ether.
 - The `_softCap` constructor parameter passed to `ColonyTokenSale`
   will correspond to roughly 15 million USD worth of ether.
+
+
+## Dappsys Advisory
+
+Since these contracts make heavy use of Dappsys, we will comment on
+further components that could be used.
+
+
+### DS-Auth
+
+The reviewed contracts make use of the `Ownable` pattern, which uses the
+`onlyOwner` modifier. Only the `owner` can call functions marked by `onlyOwner`
+and the `owner` can be updated by `changeOwner`.
+
+By default, DS-Auth provides identical functionality: when inheriting from
+`DSAuth`, functions marked with `auth` can only be called by the `owner`, which
+can be updated with `setOwner`.
+
+We suggest the use of DS-Auth as it integrates well with the remainder of
+Dappsys and allows for easy extension to more complex access patterns. However,
+the Ownable pattern does not appear problematic as specifically implemented
+here.
+
+
+### Alternative Token Architecture
+
+We will briefly mention an alternative to an upgradeable token here, whilst
+understanding the business requirements that have led to the current design.
+
+Dapphub considers `DSToken` to be a 'box' - that is, a well defined and isolated
+component that should not be extended or overridden. Excepting formal
+specification and/or direct bytecode implementation we see `DSToken` as very
+mature. However, if an upgrade were needed for some reason `DSToken` provides
+`stop` and `start`, allowing for the blocking of stateful operations. A
+distributor would then be used to initialize balances in the new token.
+
+Persistent addressing would be solved by a solution like ENS, e.g.
+`colony-token.eth` would resolve to the current token address.
