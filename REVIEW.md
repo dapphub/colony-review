@@ -244,13 +244,6 @@ contract with the `mint` function from `DSToken`, modified to use `Ownable`
 rather than `DSAuth`, some standard token attributes, and an `address resolver`
 attribute.
 
-We recommend simplifying this contract to avoid repeating `DSTokenBase`, as
-noted above.
-
-`Token.sol` uses the base ERC20 implementation from ds-token, and extends it
-with some storage variables and a `mint` function, with access controlled by the
-`Ownable` pattern.
-
 The implemented contract appears safe. However, we note that the functionality
 is already implemented in ds-token (albeit using ds-auth rather than Ownable).
 
