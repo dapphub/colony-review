@@ -23,7 +23,7 @@ feasible to verify that the compiler or emitted code are correct.
     Resolver.sol
     Token.sol
 
-The code above makes use of the `ds-math` and `ds-erc20`
+The code above makes use of the [ds-math] and [erc20]
 [dappsys](https://github.com/dapphub/dappsys) libraries of smart contracts,
 as well as a custom Token contract combining parts of the `DSToken` and
 `DSTokenBase` contracts from the `ds-token` library.
@@ -63,6 +63,7 @@ any trouble.
 
 
 [Dappsys]: https://dappsys.info
+[erc20]: https://github.com/dapphub/erc20
 [ds-note]: https://github.com/dapphub/ds-note
 [ds-auth]: https://github.com/dapphub/ds-auth
 [ds-math]: https://github.com/dapphub/ds-math
