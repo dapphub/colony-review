@@ -4,15 +4,19 @@ Prepared by Ryan Casey \<ryan@dapphub.com\> and Rain \<rain@dapphub.com\>.
 
 ## Scope
 
-The web application which interacts with the smart contracts is considered out
-of scope. This code review is only concerned with the following files:
+This document is our best attempt to review the Solidity source code at commit [7c4e01f6](https://github.com/JoinColony/colonySale/tree/7c4e01f6ee9fb69c766337812a38cf1899516509) of the Colony crowdsale repository. This is not a verification of any objects that have been deployed to the Ethereum blockchain.
 
-1. ColonyTokenSale.sol
-2. EtherRouter.sol
-3. Migrations.sol
-4. Ownable.sol
-5. Resolver.sol
-6. Token.sol
+It is important to note that no system is safe until proper verification tools exist. Solidity compiler errors are still common, and it is also not yet feasible to verify that the compiler or emitted code are correct.
+
+
+### List of Files
+
+    ColonyTokenSale.sol
+    EtherRouter.sol
+    Migrations.sol
+    Ownable.sol
+    Resolver.sol
+    Token.sol
 
 The code above makes use of the `ds-math` and `ds-erc20`
 [dappsys](https://github.com/dapphub/dappsys) libraries of smart contracts,
