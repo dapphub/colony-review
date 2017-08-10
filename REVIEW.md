@@ -507,20 +507,20 @@ at all.
 The `finalize` logic can be given as
 
 ```
-pS = tR . 1000
-tS = pS . 100 / 51
+pS = tR * 1000
+tS = pS * 100 / 51
 
-eIA = tS .  5 / 100
-tTA = tS . 10 / 100
-fA  = tS . 15 / 100
+eIA = tS *  5 / 100
+tTA = tS * 10 / 100
+fA  = tS * 15 / 100
 
-tRA = tTA - 110 . 10^18
+tRA = tTA - 110 * 10^18
 sFA = tS - (eIA + tTA + fA + pS)
 
 mint(tS)
 push(iN1, eIA)
-push(tM1, 30 . 10^18)
-push(tM2, 80 . 10^18)
+push(tM1, 30 * 10^18)
+push(tM2, 80 * 10^18)
 push(sF, sFA)
 
 tG[tM] = tRA
