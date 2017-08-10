@@ -32,7 +32,7 @@ as well as a custom Token contract combining parts of the `DSToken` and
 
 ### Major Issues
 
-We found no major issues with the contract.
+We found no major issues in the reviewed files.
 
 ### Action Items
 
@@ -68,6 +68,7 @@ any trouble.
 [ds-math]: https://github.com/dapphub/ds-math
 [ds-token]: https://github.com/dapphub/ds-token
 [dappsys-monolithic]: https://github.com/dapphub/dappsys-monolithic
+
 
 ## Requirements Overview
 
