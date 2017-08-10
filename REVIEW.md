@@ -627,3 +627,56 @@ distributor would then be used to initialize balances in the new token.
 
 Persistent addressing would be solved by a solution like ENS, e.g.
 `colony-token.eth` would resolve to the current token address.
+
+
+To illustrate the shift from inheritance-driven to container-driven
+design, consider the following example of a token that can be locked up.
+
+In an inheritance driven design, we override `transfer` semantics:
+
+```
+contract LockableToken is DSTokenBase {
+
+    mapping(address => uint) lockedTokens;
+
+    function transfer(address dst, uint wad) {
+        assert(wad <= sub(balanceOf(msg.sender), lockedTokens[msg.sender]));
+        super.transfer(dst, wad);
+    }
+
+    function lock(uint wad) {
+        assert(wad + lockedTokens[msg.sender] <= balanceOf(msg.sender));
+        lockedTokens[msg.sender] = add(lockedTokens[msg.sender], wad);
+    }
+
+    function free(uint wad) {
+        lockedTokens[msg.sender] = sub(lockedTokens[msg.sender], wad);
+    }
+}
+
+```
+
+In container driven design we treat the base token as a _box_, and we
+avoid altering `transfer` semantics:
+
+```
+contract TokenLocker {
+
+    DSToken token;
+
+    mapping(address => uint) deposits;
+
+    function lock(uint wad) {
+        token.transferFrom(msg.sender, this, wad);
+        deposits[msg.sender] = add(deposits[msg.sender], wad);
+    }
+
+    function free(uint wad) {
+        deposits[msg.sender] = sub(deposits[msg.sender], wad);
+        token.transfer(msg.sender, wad);
+    }
+}
+```
+
+The preservation of basic token semantics is a core design decision in
+Dappsys.
