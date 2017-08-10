@@ -4,9 +4,14 @@ Prepared by Ryan Casey \<ryan@dapphub.com\> and Rain \<rain@dapphub.com\>.
 
 ## Scope
 
-This document is our best attempt to review the Solidity source code at commit [7c4e01f6](https://github.com/JoinColony/colonySale/tree/7c4e01f6ee9fb69c766337812a38cf1899516509) of the Colony crowdsale repository. This is not a verification of any objects that have been deployed to the Ethereum blockchain.
+This document is our best attempt to review the Solidity source code at commit
+[7c4e01f6](https://github.com/JoinColony/colonySale/tree/7c4e01f6ee9fb69c766337812a38cf1899516509)
+of the Colony crowdsale repository. This is not a verification of any objects
+that have been deployed to the Ethereum blockchain.
 
-It is important to note that no system is safe until proper verification tools exist. Solidity compiler errors are still common, and it is also not yet feasible to verify that the compiler or emitted code are correct.
+It is important to note that no system is safe until proper verification tools
+exist. Solidity compiler errors are still common, and it is also not yet
+feasible to verify that the compiler or emitted code are correct.
 
 
 ### List of Files
@@ -23,8 +28,21 @@ The code above makes use of the `ds-math` and `ds-erc20`
 as well as a custom Token contract combining parts of the `DSToken` and
 `DSTokenBase` contracts from the `ds-token` library.
 
-## Findings
+## Summary
 
+### Major Issues
+
+We found no major issues with the contract.
+
+### Action Items
+
+- Dappsys components should be upgraded to their latest version.
+- Solidity v0.4.15 or greater should be used to compile the production
+  contracts, due to a bug in `delegatecall` in earlier versions.
+
+### Suggestions
+
+- Consider replacing `Ownable` with `DSAuth`, for consistency with Dappsys.
 - Due to the lack of a price feed, the actual soft cap and minimum raise
   amounts will almost certainly differ from the amounts given in the
   requirements. The degree to which the actual raise differs depends on
@@ -39,10 +57,6 @@ as well as a custom Token contract combining parts of the `DSToken` and
   not even distributed) until the multisig manually intervenes. This means ICO
   participants must trust that the multisig will give users their CLNY despite
   having already taken possession of their ETH.
-- Dappsys components should be upgraded to their latest version.
-- Consider replacing `Ownable` with `DSAuth`, for consistency with Dappsys.
-- Solidity v0.4.15 or greater should be used to compile the production
-  contracts, due to a bug in `delegatecall` in earlier versions.
 
 Overall the system is fairly straightforward, well-tested, and should not cause
 any trouble.
