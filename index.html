@@ -6,7 +6,7 @@
 
 # Colony Sale Code Review
 
-Prepared by Ryan Casey \<ryan@dapphub.com\> and Rain \<rain@dapphub.com\>.
+#### Prepared by Ryan Casey <ryan@dapphub.com> and Rain <rain@dapphub.com>.
 
 ## Scope
 
@@ -29,7 +29,7 @@ feasible to verify that the compiler or emitted code are correct.
     Resolver.sol
     Token.sol
 
-The code above makes use of the [ds-math] and [erc20]
+The code above makes use of the [ds-math](https://github.com/dapphub/ds-math) and [erc20](https://github.com/dapphub/erc20)
 [dappsys](https://github.com/dapphub/dappsys) libraries of smart contracts,
 as well as a custom Token contract combining parts of the `DSToken` and
 `DSTokenBase` contracts from the `ds-token` library.
@@ -79,8 +79,7 @@ any trouble.
 
 ## Requirements Overview
 
-These are the requirements as collected from [the Colony issue tracker](
-https://github.com/JoinColony/colonySale/issues?q=is%3Aissue).
+These are the requirements as collected from [the Colony issue tracker](https://github.com/JoinColony/colonySale/issues?q=is%3Aissue).
 
 1. <a name="req1">Token contract must be upgradable _in-place_. I.e., a multisig
    will be able to arbitrarily change the behavior of the contract at the token
@@ -478,8 +477,7 @@ sale has been finalized. It takes an address as an argument, `_owner`,
 calculates how much CLNY is owed `_owner` based on `TOKEN_PRICE_MULTIPLIER` and
 the amount recorded in `userBuys`, then sends the tokens to the user and zeroes
 out the `_owner` entry in `userBuys`. This puts the multisig in charge of
-distributing tokens to users after the crowdsale, which satisfies [requirement
-#7](#req7).
+distributing tokens to users after the crowdsale, which satisfies [requirement #7](#req7).
 
 The `claimVestedTokens` does not take any arguments. It allows the transaction
 sender to claim any token grants they may be entitled to in accordance with
