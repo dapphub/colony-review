@@ -57,7 +57,7 @@ h4{
   margin:0px;
 }
 
-p{
+p, li{
   font-family: 'Open Sans', sans-serif;
   font-size: 14px;
   color: #333;
