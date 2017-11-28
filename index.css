@@ -1,0 +1,82 @@
+html{ 
+  font: 12pt/1.5 sans-serif; 
+}
+body{ 
+  margin: auto; 
+  padding: 1rem; 
+  max-width: 40rem;
+  background-color: #fefefe;
+}
+pre{
+  font-size: 80%; 
+  overflow-x: auto;
+}
+@media (min-width: 1024px){
+  html { 
+    font-size: 16pt;
+  }
+}
+
+h1{
+  font-family: 'Open Sans', sans-serif;
+  font-weight:600;
+  font-size: 24px;
+  color: #333;
+  text-align: center;
+}
+
+h2{
+  font-family: 'Open Sans', sans-serif;
+  font-weight:600;
+  font-size: 18px;
+  margin-top:60px;
+  margin-bottom:20px;
+  color: #333;
+}
+
+h2:after{
+  content:' ';
+  display:block;
+  border: 1px solid #979797;
+}
+
+h3{
+  font-family: 'Open Sans', sans-serif;
+  font-weight:600;
+  font-size: 16px;
+  color: #333;
+  margin-top: 50px;
+  margin-bottom: 10px;
+}
+
+h4{
+  font-family: 'Open Sans', sans-serif;
+  font-weight:600;
+  font-size: 14px;
+  color: #333;
+  margin:0px;
+}
+
+p{
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  color: #333;
+  margin-top:10px;
+  margin-bottom: 10px;
+}
+
+pre{
+  background: #E2E1EE;
+  padding: 20px;
+  margin-top: 0px;
+  margin-bottom: 30px;
+}
+
+code{
+  font-size: 14px;
+}
+
+#nikolaimushegiandapphub{
+  text-align:center;
+  font-weight: 400;
+  }
