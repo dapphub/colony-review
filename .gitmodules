@@ -1,3 +1,3 @@
 [submodule "colonySale"]
 	path = colonySale
-	url = git@github.com:JoinColony/colonySale
+	url = https://github.com/JoinColony/colonySale.git
